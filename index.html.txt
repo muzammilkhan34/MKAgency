@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MK Agency Calculator</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+      padding: 15px;
+      color: #fff;
+    }
+
+    /* Stylish Heading */
+    .agency-title {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #00e0ff, #00ffa3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      text-align: center;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #00e0ff, 0 0 20px #00e0ff; }
+      to { text-shadow: 0 0 20px #00ffa3, 0 0 30px #00ffa3; }
+    }
+
+    .calculator {
+      background: rgba(10, 25, 47, 0.95);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #00e0ff;
+      letter-spacing: 1px;
+      font-size: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+      color: #d6e0f0;
+      font-size: 14px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #00e0ff;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #112d42;
+      color: #fff;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 18px;
+      background: linear-gradient(90deg, #00e0ff, #00ffa3);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #00ffa3, #00e0ff);
+    }
+
+    .result {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #00ffa3;
+      text-align: center;
+    }
+
+    .mini {
+      font-size: 12px;
+      margin-top: 4px;
+      color: #aaa;
+      text-align: center;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+      .agency-title {
+        font-size: 26px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+      button {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Neon Heading -->
+  <div class="agency-title">MK Agency</div>
+
+  <div class="calculator">
+    <h2>Price Calculator</h2>
+
+    <label for="platform">Select Platform:</label>
+    <select id="platform" onchange="updateServices()">
+      <option value="">-- Select Platform --</option>
+      <option value="TikTok">TikTok</option>
+      <option value="Instagram">Instagram</option>
+      <option value="YouTube">YouTube</option>
+      <option value="Facebook">Facebook</option>
+      <option value="Twitter">Twitter</option>
+    </select>
+
+    <label for="service">Select Service:</label>
+    <select id="service" onchange="calculatePrice()">
+      <option value="">-- Select Service --</option>
+    </select>
+
+    <label for="quantity">Enter Quantity:</label>
+    <input type="number" id="quantity" placeholder="Enter any number" oninput="calculatePrice()">
+
+    <label for="link">Enter Link:</label>
+    <input type="text" id="link" placeholder="Paste your link">
+
+    <button onclick="orderNow()">Order Now on WhatsApp</button>
+
+    <div class="result" id="result">Total: 0 PKR</div>
+    <div class="mini" id="minNote"></div>
+  </div>
+
+  <script>
+    const servicesData = {
+      TikTok: {
+        Views: { price: 10, min: 500, step: 500 },
+        Likes: { price: 30, min: 250, step: 250 },
+        Followers: { price: 150, min: 100, step: 100 },
+        Comments: { price: 80, min: 100, step: 100 },
+        Shares: { price: 120, min: 250, step: 250 }
+      },
+      YouTube: {
+        Watchtime: { price: 50, min: 500, step: 500 },
+        Subscribers: { price: 150, min: 100, step: 100 },
+        Comments: { price: 80, min: 100, step: 100 }
+      },
+      General: {
+        Views: { price: 20, min: 1000, step: 1000 },
+        Likes: { price: 50, min: 1000, step: 1000 },
+        Followers: { price: 150, min: 1000, step: 1000 },
+        Comments: { price: 80, min: 1000, step: 1000 },
+        Shares: { price: 120, min: 1000, step: 1000 }
+      }
+    };
+
+    function updateServices() {
+      const platform = document.getElementById("platform").value;
+      const serviceDropdown = document.getElementById("service");
+      serviceDropdown.innerHTML = '<option value="">-- Select Service --</option>';
+
+      let availableServices = [];
+      if (platform === "TikTok") availableServices = Object.keys(servicesData.TikTok);
+      else if (platform === "YouTube") availableServices = Object.keys(servicesData.YouTube);
+      else if (platform) availableServices = Object.keys(servicesData.General);
+
+      availableServices.forEach(service => {
+        const opt = document.createElement("option");
+        opt.value = service;
+        opt.textContent = `${service} (${servicesData[platform]?.[service]?.price || servicesData.General[service].price} PKR)`;
+        serviceDropdown.appendChild(opt);
+      });
+    }
+
+    function calculatePrice() {
+      const platform = document.getElementById("platform").value;
+      const service = document.getElementById("service").value;
+      const quantityInput = document.getElementById("quantity");
+      const resultDiv = document.getElementById("result");
+      const minNote = document.getElementById("minNote");
+
+      if (!platform || !service) {
+        resultDiv.innerText = "Please select platform and service.";
+        minNote.innerText = "";
+        return 0;
+      }
+
+      let serviceData;
+      if (platform === "TikTok") serviceData = servicesData.TikTok[service];
+      else if (platform === "YouTube") serviceData = servicesData.YouTube[service];
+      else serviceData = servicesData.General[service];
+
+      let quantity = parseInt(quantityInput.value);
+      if (isNaN(quantity)) {
+        resultDiv.innerText = "Enter quantity to calculate price.";
+        minNote.innerText = `Minimum Quantity: ${serviceData.min}`;
+        return 0;
+      }
+
+      let adjusted = quantity;
+      if (adjusted < serviceData.min) adjusted = serviceData.min;
+      if (adjusted % serviceData.step !== 0) {
+        adjusted = Math.ceil(adjusted / serviceData.step) * serviceData.step;
+      }
+
+      const total = (adjusted / serviceData.step) * serviceData.price;
+      resultDiv.innerText = `Total: ${total} PKR`;
+
+      if (adjusted !== quantity) {
+        minNote.innerText = `⚠ Adjusted to ${adjusted} for calculation (Min: ${serviceData.min}, Step: ${serviceData.step})`;
+      } else {
+        minNote.innerText = `Minimum Quantity: ${serviceData.min}`;
+      }
+
+      return total;
+    }
+
+    function orderNow() {
+      const platform = document.getElementById("platform").value;
+      const service = document.getElementById("service").value;
+      const quantity = document.getElementById("quantity").value;
+      const link = document.getElementById("link").value;
+      const total = calculatePrice();
+
+      if (!platform || !service || !quantity || !link) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const message = `Hello MK Agency,%0AI want to order:%0APlatform: ${platform}%0AService: ${service}%0AQuantity: ${quantity}%0ALink: ${link}%0ATotal Price: ${total} PKR`;
+      window.open(`https://wa.me/923355367236?text=${message}`, "_blank");
+    }
+  </script>
+</body>
+</html>
